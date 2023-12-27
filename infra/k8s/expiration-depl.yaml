@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: expiration-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: expiration
+  template:
+    metadata:
+      labels:
+        app: expiration
+    spec:
+      containers:
+        - name: expiration
+          image: zippoza/expiration
+          env:
+            - name: KAFKA_CLIENT_ID
+              value: 'ticketing'
+            - name: KAFKA_BROKER
+              value: redpanda-srv:19092
+            - name: KAFKA_CONSUMER_GROUP_ID
+              value: expiration-service
+            - name: REDIS_HOST
+              value: expiration-redis-srv

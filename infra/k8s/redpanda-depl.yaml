@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redpanda-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redpanda
+  template:
+    metadata:
+      labels:
+        app: redpanda
+    spec:
+      containers:
+        - name: redpanda
+          image: docker.redpanda.com/redpandadata/redpanda:latest
+          ports:
+            - containerPort: 18081
+            - containerPort: 18082
+            - containerPort: 19092
+            - containerPort: 9644
+          args:
+            [
+              'redpanda',
+              'start',
+              '--kafka-addr',
+              'internal://0.0.0.0:9092,external://0.0.0.0:19092',
+              '--advertise-kafka-addr',
+              'internal://redpanda:9092,external://redpanda-srv:19092',
+              '--pandaproxy-addr',
+              'internal://0.0.0.0:8082,external://0.0.0.0:18082',
+              '--advertise-pandaproxy-addr',
+              'internal://redpanda:8082,external://redpanda-srv:18082',
+              '--schema-registry-addr',
+              'internal://0.0.0.0:8081,external://0.0.0.0:18081',
+              '--rpc-addr',
+              '0.0.0.0:33145',
+              '--advertise-rpc-addr',
+              'redpanda:33145',
+              '--smp',
+              '1',
+              '--memory',
+              '1G',
+              '--mode',
+              'dev-container',
+            ]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redpanda-srv
+spec:
+  selector:
+    app: redpanda
+  ports:
+    - name: client
+      protocol: TCP
+      port: 19092 # Kafka port
+      targetPort: 19092
+    - name: monitoring
+      protocol: TCP
+      port: 9644 # Admin API port
+      targetPort: 9644
